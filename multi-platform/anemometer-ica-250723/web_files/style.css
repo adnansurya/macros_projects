@@ -1,0 +1,28 @@
+body{
+    font-family: sans-serif;
+}
+table{
+    width: 50%;
+    margin-top: 15px;
+    border-collapse: collapse;
+}
+table th,
+table td{
+    border: 1px solid #098050;
+    padding: 3px 8px;
+
+}
+.excel{
+    background: #098050;
+    color: #fff;
+    padding: 8px 10px;
+    text-decoration: none;
+    border-radius: 2px;
+}
+.pdf{
+    background: #c90a10;
+    color: #fff;
+    padding: 8px 10px;
+    text-decoration: none;
+    border-radius: 2px;
+}
