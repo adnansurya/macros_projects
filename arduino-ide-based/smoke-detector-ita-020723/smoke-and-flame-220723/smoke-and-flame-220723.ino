@@ -16,7 +16,9 @@
 #define mq7Pin 33
 #define flamePin 26
 
-#define buzzerPin 5
+
+#define buzzerPin 25
+#define fanPin 32
 
 int adcSmoke = 0;
 
@@ -26,14 +28,17 @@ const unsigned long BOT_MTBS = 1000;  // mean time between scan messages
 WiFiClientSecure secured_client;
 UniversalTelegramBot bot(BOT_TOKEN, secured_client);
 
-String idTujuan = "5707679049";//"108488036";
-unsigned long bot_lasttime;  // last time messages' scan has been done
+String idTujuan = "5707679049";  //"108488036";
+unsigned long bot_lasttime;      // last time messages' scan has been done
 
 void setup() {
   Serial.begin(9600);
 
   pinMode(buzzerPin, OUTPUT);
   digitalWrite(buzzerPin, LOW);
+
+  pinMode(fanPin, OUTPUT);
+  digitalWrite(fanPin, HIGH);
 
   pinMode(flamePin, INPUT);
 
@@ -71,16 +76,30 @@ void loop() {
   Serial.print(persenSmoke);
   Serial.println(" %");
 
-  if(persenSmoke > 10){
-     bot.sendMessage(idTujuan, "Asap melebihi 10% !", "");
-  }
-
   int adaApi = !digitalRead(flamePin);
   Serial.print("API: ");
   Serial.println(adaApi);
-  delay(1000);
 
-  if(adaApi){
-     bot.sendMessage(idTujuan, "Api Terdeteksi", "");
+
+  if (persenSmoke > 10) {
+    bot.sendMessage(idTujuan, "Asap melebihi 10% !", "");
+    kondisiBahaya();
+  } else if (adaApi) {
+    bot.sendMessage(idTujuan, "Api Terdeteksi", "");
+    kondisiBahaya();
+  } else {
+    kondisiAman();
   }
+    delay(500);
+}
+
+
+void kondisiAman() {
+  digitalWrite(buzzerPin, LOW);
+  digitalWrite(fanPin, HIGH);
+}
+
+void kondisiBahaya() {
+  digitalWrite(buzzerPin, HIGH);
+  digitalWrite(fanPin, LOW);
 }
