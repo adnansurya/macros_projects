@@ -1,4 +1,3 @@
-//LIBRARY YANG DIGUNAKAN
 #if defined(ESP32)
 #include <WiFi.h>
 #elif defined(ESP8266)
@@ -8,39 +7,32 @@
 #include <WiFiClientSecure.h>
 #include <UniversalTelegramBot.h>
 
-////LIBRARY YANG DIGUNAKAN
-
-
-//AKSES WIFI
 #define WIFI_SSID "Ritaa"
 #define WIFI_PASSWORD "wkwkwkwk"
 
 // Telegram BOT Token (Get from Botfather)
 #define BOT_TOKEN "6035914260:AAEBnPmOs_TGL9RGCHpwAoAJiNwjDCpKW7U"
 
-//VARIABEL PIN
 #define mq7Pin 33
 #define flamePin 26
+
 
 #define buzzerPin 25
 #define fanPin 32
 
-#define batasAsap 5
+int adcSmoke = 0;
 
 
-int adcSmoke = 0; //variabel untuk menyimpan nilai adc dari sensor asap (0-4096)
+const unsigned long BOT_MTBS = 1000;  // mean time between scan messages
 
-//variabel objek untuk koneksi ke telegram
 WiFiClientSecure secured_client;
 UniversalTelegramBot bot(BOT_TOKEN, secured_client);
 
-
 String idTujuan = "5707679049";  //"108488036";
-
+unsigned long bot_lasttime;      // last time messages' scan has been done
 
 void setup() {
-
-  Serial.begin(9600); //kecepatan bit komunikasi serial
+  Serial.begin(9600);
 
   pinMode(buzzerPin, OUTPUT);
   beep(buzzerPin, 1, 0.2);
@@ -61,11 +53,11 @@ void setup() {
     delay(500);
   }
 
-  beep(buzzerPin, 3, 0.5);
+  beep(buzzerPin, 3, 1);
 
-  Serial.print("WiFi terhubung. IP address: ");
+  Serial.print("WiFi connected. IP address: ");
   Serial.println(WiFi.localIP());
-  Serial.print("Memperbarui waktu: ");
+  Serial.print("Retrieving time: ");
   configTime(0, 0, "pool.ntp.org");  // get UTC time via NTP
   time_t now = time(nullptr);
   while (now < 24 * 3600) {
@@ -91,8 +83,8 @@ void loop() {
   Serial.println(adaApi);
 
 
-  if (persenSmoke > batasAsap) { //jika persentase nilai asap dibawah 10 %
-    bot.sendMessage(idTujuan, "Asap melebihi "+String(batasAsap)+" % !\nKadar Asap : " + String(persenSmoke) + " %", "");
+  if (persenSmoke > 10) {
+    bot.sendMessage(idTujuan, "Asap melebihi 10% !", "");
     kondisiBahaya();
   } else if (adaApi) {
     bot.sendMessage(idTujuan, "Api Terdeteksi", "");
