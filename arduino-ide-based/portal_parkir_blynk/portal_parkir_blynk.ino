@@ -7,12 +7,13 @@
 #include <WiFi.h>
 #include <WiFiClient.h>
 #include <BlynkSimpleEsp32.h>
+#include <dimmable_light.h>
 
 #define BLYNK_PRINT Serial
 
-#define infra1Pin 4
-#define infra2Pin 5
-#define ldrPin 35
+#define infra1Pin 18
+#define infra2Pin 19
+#define ldrPin 5
 #define servoPin 23
 
 #define trig1Pin 32
@@ -20,10 +21,24 @@
 #define echo1Pin 33
 #define echo2Pin 26
 
-char ssid[] = "Cafe Tulus";
-char pass[] = "PesanDulu";
+#define zeroCrossPin 13
+#define dimmer1Pin 14
+#define dimmer2Pin 12
+
+DimmableLight dimmer1(dimmer1Pin);
+DimmableLight dimmer2(dimmer2Pin);
+
+char ssid[] = "MIKRO";
+char pass[] = "IDEAlist";
 
 BlynkTimer timer;
+
+const int redupSiang = 0;
+const int redupMalam = 64;
+const int terangSiang = 128;
+const int terangMalam = 255;
+
+bool nowSiang = false;
 
 const int maxJarak = 200;
 const int batasJarak = 10;
@@ -57,6 +72,9 @@ void setup() {
   lastInfra1 = infra1Val;
   lastInfra2 = infra2Val;
 
+  DimmableLight::setSyncPin(zeroCrossPin);
+  DimmableLight::begin();
+
   timer.setInterval(500L, myTimerEvent);
 }
 
@@ -75,15 +93,40 @@ void myTimerEvent() {
   Blynk.virtualWrite(V1, ultra1Val);
   Blynk.virtualWrite(V2, ultra2Val);
 
+  nowSiang = ldrVal;
+
   if (ultra1Val < batasJarak) {
+    if (nowSiang) {
+      dimmer1.setBrightness(terangSiang);
+    } else {
+      dimmer1.setBrightness(terangMalam);
+    }
+
     Blynk.virtualWrite(V3, "Ada Mobil");
+
   } else {
+    if (nowSiang) {
+      dimmer1.setBrightness(redupSiang);
+    } else {
+      dimmer1.setBrightness(redupMalam);
+    }
     Blynk.virtualWrite(V3, "Kosong");
   }
 
   if (ultra2Val < batasJarak) {
+    if (nowSiang) {
+      dimmer2.setBrightness(terangSiang);
+    } else {
+      dimmer2.setBrightness(terangMalam);
+    }
     Blynk.virtualWrite(V4, "Ada Mobil");
+
   } else {
+    if (nowSiang) {
+      dimmer2.setBrightness(redupSiang);
+    } else {
+      dimmer2.setBrightness(redupMalam);
+    }
     Blynk.virtualWrite(V4, "Kosong");
   }
 
