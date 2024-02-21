@@ -18,6 +18,9 @@ cap = cv2.VideoCapture(0) # Menggunakan nomor 0 untuk webcam default
 frame_count = 0
 last_label = ''
 
+on_process = False
+processed = ''
+
 while True:
     ret, frame = cap.read()
     height, width, channels = frame.shape
@@ -32,8 +35,21 @@ while True:
     confidences = []
     boxes = []
 
+    data_arduino = ser.readline()
+    data_arduino = data_arduino.decode('utf-8').rstrip()
     
-   
+    if data_arduino != '':
+        print("DATA ARDUINO : " + str(data_arduino))
+    
+  
+    
+    if data_arduino == "DIPROSES":
+        on_process = True
+        print("STATUS ON PROGRESS")
+        processed = last_label
+    elif data_arduino == "STOP":
+        on_process = False
+        print("STATUS STOP")
     
     for out in outs:
         
@@ -73,30 +89,33 @@ while True:
         if i in indexes:
             x, y, w, h = boxes[i]
             label = str(classes[class_ids[i]])
-            color = colors[class_ids[i]]
-
-
+            color = colors[class_ids[i]]                    
             
-            if(last_label == label):               
-                frame_count += 1
+            if not on_process:
+                
+                if(last_label == label):               
+                    frame_count += 1
+                else:
+                    frame_count = 0
+                    
+                if frame_count == 5:
+                    print("FIX : " + label)                
+                    ser.write(str("kategori:" + label + "\n").encode())
+                    frame_count = 0
+                    
+                
+                print(label)
+                
+                last_label = label
+                                                
+                    
+                color = (255, 255, 255)  # Putih untuk label
+                
+                cv2.putText(frame, label, (x, y - 10), font, 1, color, 2, cv2.LINE_AA)
+                cv2.rectangle(frame, (x, y), (x + w, y + h), color, 2)
+                cv2.putText(frame, label, (x, y + 30), font, 3, color, 3)
             else:
-                frame_count = 0
-                
-            if frame_count == 5:
-                print("FIX : " + label)
-                ser.write(str(label + "\n").encode())
-                frame_count = 0
-                
-            
-            print(label)
-            
-            last_label = label
-                                              
-                
-            color = (255, 255, 255)  # Putih untuk label
-            cv2.putText(frame, label, (x, y - 10), font, 1, color, 2, cv2.LINE_AA)
-            cv2.rectangle(frame, (x, y), (x + w, y + h), color, 2)
-            cv2.putText(frame, label, (x, y + 30), font, 3, color, 3)
+                cv2.putText(frame, processed.upper() + " detected, On Process...", (10, 30), font, 1, color, 2, cv2.LINE_AA)
 
     # Jika tidak ada objek yang terdeteksi, kirim sinyal "Not detected"
     # if not object_detected:
