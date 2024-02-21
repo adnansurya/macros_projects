@@ -3,7 +3,7 @@ import numpy as np
 import serial
 
 # Inisialisasi koneksi serial dengan Arduino
-#ser = serial.Serial('COM7', 9600, timeout=0.1)
+ser = serial.Serial('COM9', 9600, timeout=0.1)
 
 # Load YOLO
 net = cv2.dnn.readNet("yolov4.weights", "yolov4.cfg")
@@ -79,9 +79,14 @@ while True:
             
             if(last_label == label):               
                 frame_count += 1
-            if frame_count == 5:
-                print("FIX : ")
+            else:
                 frame_count = 0
+                
+            if frame_count == 5:
+                print("FIX : " + label)
+                ser.write(str(label + "\n").encode())
+                frame_count = 0
+                
             
             print(label)
             
